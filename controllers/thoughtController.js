@@ -9,7 +9,7 @@ module.exports = {
   },
   // Get a single thought
   getSingleThought(req, res) {
-    Thought.findOne({ _id: req.params.thoughtId })
+    Thoughts.findOne({ _id: req.params.thoughtId })
       .select('-__v')
       .then((thought) =>
         !thought
@@ -20,7 +20,7 @@ module.exports = {
   },
   // Create a thought
   createThought(req, res) {
-    Thought.create(req.body)
+    Thoughts.create(req.body)
       .then((thought) => res.json(thought))
       .catch((err) => {
         console.log(err);
@@ -29,7 +29,7 @@ module.exports = {
   },
   // Delete a thought
   deleteThought(req, res) {
-    Thought.findOneAndDelete({ _id: req.params.thoughtId })
+    Thoughts.findOneAndDelete({ _id: req.params.thoughtId })
       .then((thought) =>
         !thought
           ? res.status(404).json({ message: 'No thought with that ID' })
@@ -40,7 +40,7 @@ module.exports = {
   },
   // Update a thought
   updateThought(req, res) {
-    Course.findOneAndUpdate(
+    Thoughts.findOneAndUpdate(
       { _id: req.params.thoughtId },
       { $set: req.body },
       { runValidators: true, new: true }
@@ -52,4 +52,33 @@ module.exports = {
       )
       .catch((err) => res.status(500).json(err));
   },
+
+  addReaction(req, res) {
+    Thoughts.findOneAndUpdate(
+      { _id: req.params.thoughtId },
+      { $addToSet: { reactions: req.body } },
+      { runValidators: true, new: true }
+    )
+      .then((thought) =>
+        !thought
+          ? res.status(404).json({ message: 'No thought with this id!' })
+          : res.json(thought)
+      )
+      .catch((err) => res.status(500).json(err));
+  },
+
+  deleteReaction(req, res) {
+    Thoughts.findOneAndUpdate(
+      { _id: req.params.thoughtId },
+      { $pull: { reactions: req.params.reactionId } },
+      { runValidators: true, new: true }
+    )
+      .then((thought) =>
+        !thought
+          ? res.status(404).json({ message: 'No thought with this id!' })
+          : res.json(thought)
+      )
+      .catch((err) => res.status(500).json(err));
+  },
 };
+

@@ -1,7 +1,7 @@
 const { User , Thoughts } = require('../models');
 
 module.exports = {
-  // Get all courses
+  // Get all users
   getUsers(req, res) {
     User.find()
       .then((users) => res.json(users))
@@ -11,10 +11,12 @@ module.exports = {
   getSingleUser(req, res) {
     User.findOne({ _id: req.params.userId })
       .select('-__v')
-      .then((course) =>
-        !course
+      .populate('friends')
+      .populate('thoughts')
+      .then((user) =>
+        !user
           ? res.status(404).json({ message: 'No user with that ID' })
-          : res.json(course)
+          : res.json(user)
       )
       .catch((err) => res.status(500).json(err));
   },
@@ -38,16 +40,44 @@ module.exports = {
       .then(() => res.json({ message: 'User deleted!' }))
       .catch((err) => res.status(500).json(err));
   },
-  // Update a course
+  // Update a user
   updateUser(req, res) {
-    Course.findOneAndUpdate(
+    User.findOneAndUpdate(
       { _id: req.params.userId },
       { $set: req.body },
       { runValidators: true, new: true }
     )
       .then((user) =>
         !user
-          ? res.status(404).json({ message: 'No userwith this id!' })
+          ? res.status(404).json({ message: 'No user with this id!' })
+          : res.json(user)
+      )
+      .catch((err) => res.status(500).json(err));
+  },
+
+  addFriend(req, res) {
+    User.findOneAndUpdate(
+      { _id: req.params.userId },
+      { $addToSet: { friends: req.params.friendId} },
+      { runValidators: true, new: true }
+    )
+      .then((user) =>
+        !user
+          ? res.status(404).json({ message: 'No user with this id!' })
+          : res.json(user)
+      )
+      .catch((err) => res.status(500).json(err));
+  },
+
+  deleteFriend(req, res) {
+    User.findOneAndUpdate(
+      { _id: req.params.userId },
+      { $pull: { friends:  req.params.friendId } },
+      { runValidators: true, new: true }
+    )
+      .then((user) =>
+        !user
+          ? res.status(404).json({ message: 'No user with this id!' })
           : res.json(user)
       )
       .catch((err) => res.status(500).json(err));
